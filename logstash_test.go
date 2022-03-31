@@ -1,6 +1,7 @@
 package zerolog_logstash
 
 import (
+	"context"
 	"io"
 	"os"
 	"testing"
@@ -10,16 +11,20 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func createMultiLevelWriters(t *testing.T, bufferSize int) (w *Writer, z zerolog.Logger) {
+func createMultiLevelWriters(t *testing.T, bufferSize int, cancel context.CancelFunc, context context.Context) (w *Writer, z zerolog.Logger) {
 	client, err := lumber.Dial("localhost:5044")
 	if err != nil {
 		panic("could not dial logstash service")
 	}
 	t.Cleanup(func() {
+		if cancel != nil {
+			cancel()
+		}
+		time.Sleep(1 * time.Second)
 		client.Close()
 	})
 
-	w = NewWriter(client, WithBufferSize(bufferSize))
+	w = NewWriter(client, WithBufferSize(bufferSize), WithContext(context))
 	writers := []io.Writer{
 		zerolog.ConsoleWriter{
 			Out:        os.Stderr,
@@ -32,7 +37,7 @@ func createMultiLevelWriters(t *testing.T, bufferSize int) (w *Writer, z zerolog
 }
 
 func TestSimpleString(t *testing.T) {
-	w, z := createMultiLevelWriters(t, 30)
+	w, z := createMultiLevelWriters(t, 30, nil, context.Background())
 	str := "string"
 	z.Trace().
 		Str("str", str).
@@ -40,8 +45,9 @@ func TestSimpleString(t *testing.T) {
 	w.Flush(1 * time.Second)
 }
 
-func TestParallelLogging(t *testing.T) {
-	w, z := createMultiLevelWriters(t, 7)
+func TestParallelLoggingWithContext(t *testing.T) {
+	context, cancel := context.WithCancel(context.Background())
+	_, z := createMultiLevelWriters(t, 7, cancel, context)
 	for i := 0; i < 5; i++ {
 		go func(j int) {
 			z.Warn().
@@ -50,14 +56,10 @@ func TestParallelLogging(t *testing.T) {
 		}(i)
 	}
 	time.Sleep(700 * time.Millisecond)
-	flushed := w.Flush(1 * time.Second)
-	for !flushed {
-		flushed = w.Flush(1 * time.Second)
-	}
 }
 
 func TestFlush(t *testing.T) {
-	w, z := createMultiLevelWriters(t, 5)
+	w, z := createMultiLevelWriters(t, 5, nil, context.Background())
 	for i := 0; i < 5; i++ {
 		go func(j int) {
 			z.Warn().

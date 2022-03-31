@@ -137,6 +137,9 @@ func (lw *Writer) worker(ctx context.Context) {
 
 			// End of application
 			case <-ctx.Done():
+				// Drain buffer
+				<-lw.buffer
+				closedItems = true
 				close(b.items)
 			}
 		}
