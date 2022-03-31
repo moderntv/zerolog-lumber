@@ -1,0 +1,7 @@
+#output.logstash:
+#  hosts: ["127.0.0.1:5044"]
+http.port: 9600
+pipeline:
+  batch:
+    size: 125
+    delay: 50

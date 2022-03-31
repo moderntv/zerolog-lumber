@@ -1,0 +1,8 @@
+version: "3.5"
+
+services:
+    logstash:
+        image: docker.elastic.co/logstash/logstash:8.1.1
+        ports: ['5044:5044', '9600:9600']
+            #volumes:
+            #    - "./conf:/usr/share/logstash/config/"
