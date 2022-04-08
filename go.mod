@@ -1,4 +1,4 @@
-module zerolog-lumber
+module github.com/moderntv/zerolog-lumber
 
 go 1.18
 
