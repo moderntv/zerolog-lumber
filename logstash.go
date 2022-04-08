@@ -121,8 +121,8 @@ func (lw *Writer) worker(ctx context.Context) {
 			}
 
 			select {
-			case item := <-b.items:
-				if item == nil {
+			case item, more := <-b.items:
+				if !more {
 					closedItems = true
 					continue
 				}
