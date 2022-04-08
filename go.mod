@@ -1,4 +1,4 @@
-module zerolog-logstash
+module zerolog-lumber
 
 go 1.18
 
