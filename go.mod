@@ -1,6 +1,6 @@
-module zerolog-logstash-writer
+module zerolog-logstash
 
-go 1.17
+go 1.18
 
 require github.com/rs/zerolog v1.26.1
 
